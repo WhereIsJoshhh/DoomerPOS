@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Caja y cierres</h2>
+<section class="panel"><p>Total registrado del día: <strong>L {{ '%.2f'|format(total) }}</strong></p><button>Simular cierre de caja</button></section>
+<table><thead><tr><th>Pedido</th><th>Estado</th><th>Total</th></tr></thead>
+<tbody>{% for p in pedidos %}<tr><td>{{ p.id_pedido }}</td><td>{{ p.estado }}</td><td>L {{ p.total }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %}

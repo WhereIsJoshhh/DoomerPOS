@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div><h1>Reportes</h1><p>Ventas, caja, inventario y estadisticas segun permisos del rol.</p></div>
+  <span class="pill soft">{{ desde }} - {{ hasta }}</span>
+</header>
+
+<section class="panel">
+  <form method="get" class="form-grid">
+    <label>Desde<input type="date" name="desde" value="{{ desde }}"></label>
+    <label>Hasta<input type="date" name="hasta" value="{{ hasta }}"></label>
+    <button class="btn primary">Filtrar</button>
+  </form>
+</section>
+
+<section class="kpi-grid">
+  <div class="kpi success"><span>Ventas</span><strong>L {{ '%.2f'|format(ventas) }}</strong></div>
+  <div class="kpi"><span>Pedidos pagados</span><strong>{{ pedidos_pagados }}</strong></div>
+  <div class="kpi warn"><span>Pedidos cancelados</span><strong>{{ pedidos_cancelados }}</strong></div>
+  <div class="kpi"><span>Ticket promedio</span><strong>L {{ '%.2f'|format(ticket_promedio) }}</strong></div>
+  {% if g.usuario.puede('reportes.ver') %}
+  <div class="kpi"><span>Descuentos</span><strong>L {{ '%.2f'|format(descuentos) }}</strong></div>
+  <div class="kpi"><span>Cargos</span><strong>L {{ '%.2f'|format(cargos) }}</strong></div>
+  {% endif %}
+</section>
+
+<section class="grid-2">
+  <div class="panel"><h2>Tendencia ultimos 7 dias</h2><div class="bar-list">{% set maxv = ventas_semana|map(attribute=1)|max if ventas_semana else 0 %}{% for dia,total in ventas_semana %}<div class="bar-row"><span>{{ dia }}</span><div class="bar"><span style="width:{{ (total / maxv * 100) if maxv else 0 }}%"></span></div><strong>L {{ '%.0f'|format(total) }}</strong></div>{% endfor %}</div></div>
+  <div class="panel"><h2>Ventas por metodo de pago</h2><table><tbody>{% for nombre, total in ventas_por_pago %}<tr><td>{{ nombre }}</td><td class="right">L {{ '%.2f'|format(total) }}</td></tr>{% else %}<tr><td>No hay pagos en el rango.</td></tr>{% endfor %}</tbody></table></div>
+</section>
+
+{% if g.usuario.puede('reportes.ver') %}
+<section class="grid-2">
+  <div class="panel"><h2>Productos mas vendidos</h2><table><thead><tr><th>Producto</th><th>Cant.</th><th>Total</th></tr></thead><tbody>{% for nombre, cantidad, total in top_productos %}<tr><td>{{ nombre }}</td><td>{{ cantidad }}</td><td class="right">L {{ '%.2f'|format(total) }}</td></tr>{% else %}<tr><td colspan="3">No hay productos vendidos.</td></tr>{% endfor %}</tbody></table></div>
+  <div class="panel"><h2>Ventas por usuario</h2><table><thead><tr><th>Usuario</th><th>Pedidos</th><th>Total</th></tr></thead><tbody>{% for nombre, total, pedidos in ventas_por_usuario %}<tr><td>{{ nombre }}</td><td>{{ pedidos }}</td><td class="right">L {{ '%.2f'|format(total) }}</td></tr>{% else %}<tr><td colspan="3">Sin ventas por usuario.</td></tr>{% endfor %}</tbody></table></div>
+</section>
+{% endif %}
+
+{% if g.usuario.puede('inventario.ver') %}
+<section class="grid-2">
+  <div class="panel"><h2>Inventario actual</h2><table><thead><tr><th>Producto</th><th>Stock</th><th>Minimo</th><th>Estado</th></tr></thead><tbody>{% for i in inventario %}<tr><td>{{ i.producto.nombre }}</td><td>{{ i.existencia_actual }}</td><td>{{ i.producto.stock_minimo }}</td><td>{% if i.existencia_actual <= i.producto.stock_minimo %}<span class="status cancelado">Bajo</span>{% else %}<span class="status pagado">OK</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+  <div class="panel"><h2>Cierres de caja</h2><table><thead><tr><th>#</th><th>Sistema</th><th>Contado</th><th>Diferencia</th></tr></thead><tbody>{% for c in cierres %}<tr><td>{{ c.id_cierre }}</td><td>L {{ '%.2f'|format(c.total_sistema) }}</td><td>L {{ '%.2f'|format(c.total_contado) }}</td><td>L {{ '%.2f'|format(c.diferencia) }}</td></tr>{% else %}<tr><td colspan="4">Sin cierres.</td></tr>{% endfor %}</tbody></table></div>
+</section>
+{% else %}
+<section class="panel"><h2>Cierres de caja</h2><table><thead><tr><th>#</th><th>Sistema</th><th>Contado</th><th>Diferencia</th></tr></thead><tbody>{% for c in cierres %}<tr><td>{{ c.id_cierre }}</td><td>L {{ '%.2f'|format(c.total_sistema) }}</td><td>L {{ '%.2f'|format(c.total_contado) }}</td><td>L {{ '%.2f'|format(c.diferencia) }}</td></tr>{% else %}<tr><td colspan="4">Sin cierres.</td></tr>{% endfor %}</tbody></table></section>
+{% endif %}
+
+{% if g.usuario.puede('compras.gestionar') %}
+<section class="grid-2">
+  <div class="panel"><h2>Compras del periodo</h2><table><thead><tr><th>Fecha</th><th>Proveedor</th><th>Total</th></tr></thead><tbody>{% for c in compras %}<tr><td>{{ c.fecha.strftime('%Y-%m-%d') }}</td><td>{{ c.proveedor.nombre }}</td><td class="right">L {{ '%.2f'|format(c.total_compra) }}</td></tr>{% else %}<tr><td colspan="3">Sin compras.</td></tr>{% endfor %}</tbody></table></div>
+  <div class="panel"><h2>Movimientos de caja</h2><table><thead><tr><th>Tipo</th><th>Concepto</th><th>Monto</th></tr></thead><tbody>{% for m in movimientos_caja %}<tr><td>{{ m.tipo }}</td><td>{{ m.concepto }}</td><td class="right">L {{ '%.2f'|format(m.monto) }}</td></tr>{% else %}<tr><td colspan="3">Sin movimientos.</td></tr>{% endfor %}</tbody></table></div>
+</section>
+<section class="panel"><h2>Mermas del periodo</h2><table><thead><tr><th>Fecha</th><th>Producto</th><th>Cantidad</th><th>Motivo</th></tr></thead><tbody>{% for m in mermas %}<tr><td>{{ m.fecha.strftime('%Y-%m-%d') }}</td><td>{{ m.producto.nombre }}</td><td>{{ m.cantidad }}</td><td>{{ m.motivo }}</td></tr>{% else %}<tr><td colspan="4">Sin mermas en el rango.</td></tr>{% endfor %}</tbody></table></section>
+{% endif %}
+{% endblock %}

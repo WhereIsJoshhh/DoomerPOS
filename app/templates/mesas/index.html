@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header"><div><h1>Plano de mesas</h1><p>Control visual por estado: libre, ocupada, reservada y limpieza.</p></div><span class="pill soft">Salón</span></header>
+<section class="kpi-grid">
+  {% for est,total in resumen.items() %}<div class="kpi"><span>{{ est }}</span><strong>{{ total }}</strong></div>{% endfor %}
+</section>
+<section class="panel"><form method="get" class="searchbar"><select name="zona"><option value="">Todas las zonas</option>{% for z in zonas %}<option value="{{ z }}" {% if zona==z %}selected{% endif %}>{{ z }}</option>{% endfor %}</select><button class="btn primary">Filtrar</button></form></section>
+<section class="mesa-grid">
+  {% for m in mesas %}
+  <div class="mesa-card {{ m.estado }}">
+    <h2>Mesa {{ m.numero_mesa }}</h2>
+    <p>{{ m.zona }} · {{ m.capacidad }} personas</p>
+    <span class="status {{ m.estado }}">{{ m.estado }}</span>
+    {% if pedidos_por_mesa.get(m.id_mesa) %}<p><strong>Pedido #{{ pedidos_por_mesa[m.id_mesa].id_pedido }}</strong><br>Total L {{ '%.2f'|format(pedidos_por_mesa[m.id_mesa].total) }}</p>{% endif %}
+    {% if m.notas %}<p class="muted">{{ m.notas }}</p>{% endif %}
+    <form method="post" action="{{ url_for('mesas.cambiar_estado', id_mesa=m.id_mesa) }}" class="form-stack">
+      <label>Estado<select name="estado"><option value="libre">libre</option><option value="ocupada">ocupada</option><option value="reservada">reservada</option><option value="limpieza">limpieza</option></select></label>
+      <label>Notas<input name="notas" placeholder="Ej. limpiar mesa / reserva 7:00 pm"></label>
+      <button class="btn" type="submit">Actualizar mesa</button>
+    </form>
+  </div>
+  {% endfor %}
+</section>
+{% endblock %}

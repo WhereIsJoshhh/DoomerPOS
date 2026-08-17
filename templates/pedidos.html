@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Pantalla POS / Pedidos</h2>
+<form method="post" class="panel form-inline">
+  <label>Producto</label>
+  <select name="id_producto" required>
+    {% for p in productos %}<option value="{{ p.id_producto }}">{{ p.nombre }} - L {{ p.precio }}</option>{% endfor %}
+  </select>
+  <label>Mesa</label>
+  <select name="id_mesa">
+    <option value="">Mostrador</option>
+    {% for m in mesas %}<option value="{{ m.id_mesa }}">Mesa {{ m.numero_mesa }} - {{ m.estado }}</option>{% endfor %}
+  </select>
+  <button type="submit">Crear pedido y enviar a cocina</button>
+</form>
+<table>
+  <thead><tr><th>ID</th><th>Fecha</th><th>Estado</th><th>Total</th></tr></thead>
+  <tbody>{% for p in pedidos %}<tr><td>{{ p.id_pedido }}</td><td>{{ p.fecha }}</td><td>{{ p.estado }}</td><td>L {{ p.total }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endblock %}

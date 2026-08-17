@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="empty-state">
+  <h1>Error 404</h1>
+  <p>La página solicitada no existe.</p>
+  <a class="btn" href="{{ url_for('dashboard.index') if g.usuario else url_for('auth.login') }}">Volver</a>
+</section>
+{% endblock %}

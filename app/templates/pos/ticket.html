@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="print-actions"><button class="btn primary" onclick="window.print()">Imprimir simulación</button><a class="btn ghost" href="{{ url_for('pos.index', estado='pagado') }}">Volver</a></div>
+<section class="ticket">
+  <h1>DoomerPOS v4.0</h1>
+  <p style="text-align:center">Ticket / Factura simulada<br>{{ pedido.sucursal.nombre }}</p>
+  <div class="line"></div>
+  <p>Pedido: #{{ pedido.id_pedido }}<br>Fecha: {{ pedido.fecha_cierre.strftime('%Y-%m-%d %H:%M') if pedido.fecha_cierre else pedido.fecha.strftime('%Y-%m-%d %H:%M') }}<br>Cajero/Mesero: {{ pedido.usuario.nombre }}<br>Mesa: {{ pedido.mesa.numero_mesa if pedido.mesa else 'Mostrador' }}<br>Pago: {{ pedido.tipo_pago }}</p>
+  <div class="line"></div>
+  {% for d in pedido.detalles %}<p>{{ d.cantidad }} x {{ d.producto.nombre }}<br><span style="float:right">L {{ '%.2f'|format(d.subtotal) }}</span></p>{% endfor %}
+  <div class="line"></div>
+  <p>Subtotal <span style="float:right">L {{ '%.2f'|format(pedido.subtotal) }}</span></p>
+  <p>Descuento <span style="float:right">-L {{ '%.2f'|format(pedido.descuento) }}</span></p>
+  <p>Cargo adicional <span style="float:right">L {{ '%.2f'|format(pedido.cargo_adicional) }}</span></p>
+  <p>ISV <span style="float:right">L {{ '%.2f'|format(pedido.impuesto) }}</span></p>
+  <h2>Total <span style="float:right">L {{ '%.2f'|format(pedido.total) }}</span></h2>
+  <div class="line"></div>
+  {% for pago in pedido.pagos %}<p>{{ pago.metodo_pago.nombre }} <span style="float:right">L {{ '%.2f'|format(pago.monto) }}</span></p>{% endfor %}
+  <div class="line"></div>
+  <p style="text-align:center">Gracias por su compra<br>Documento académico no fiscal</p>
+</section>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Plano de mesas</h2>
+<section class="grid-mesas">
+  {% for m in mesas %}<article class="mesa {{ m.estado }}"><strong>Mesa {{ m.numero_mesa }}</strong><span>{{ m.zona }}</span><em>{{ m.estado }}</em></article>{% endfor %}
+</section>
+{% endblock %}

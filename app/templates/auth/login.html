@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="auth-card">
+  <div class="auth-hero">
+    <div class="brand" style="margin-bottom:32px"><div class="brand-mark">DP</div><div><strong>DoomerPOS</strong><span>v4.0 Alto Potencial</span></div></div>
+    <h1>Control total para restaurantes modernos.</h1>
+    <p>DoomerPOS integra pedidos, mesas, cocina, caja, inventario, compras, reportes y auditoría en una sola plataforma académica profesional.</p>
+    <div class="kpi-grid" style="margin-top:30px">
+      <div class="kpi" style="background:rgba(255,255,255,.12);color:white"><span style="color:#dbeafe">Seguridad</span><strong>Roles</strong></div>
+      <div class="kpi" style="background:rgba(255,255,255,.12);color:white"><span style="color:#dbeafe">Operación</span><strong>POS</strong></div>
+    </div>
+  </div>
+  <div class="auth-box">
+    <h2>Iniciar sesión</h2>
+    <p class="muted">Ingresa con un usuario demo o una cuenta creada por el administrador.</p>
+    <form method="post" class="form-stack">
+      <label>Usuario<input name="usuario_login" placeholder="admin" autofocus required></label>
+      <label>Contraseña<input type="password" name="password" placeholder="admin123" required></label>
+      <button class="btn primary" type="submit">Entrar al sistema</button>
+    </form>
+    <div class="panel info" style="margin-top:18px">
+      <strong>Demo principal</strong>
+      <p class="muted">Usuario: <b>admin</b> · Contraseña: <b>admin123</b></p>
+    </div>
+  </div>
+</section>
+{% endblock %}

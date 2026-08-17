@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Inventario</h2>
+<table><thead><tr><th>Producto</th><th>Almacén</th><th>Existencia</th><th>Costo promedio</th></tr></thead>
+<tbody>{% for i in inventarios %}<tr><td>{{ i.producto.nombre }}</td><td>{{ i.almacen.nombre }}</td><td>{{ i.existencia_actual }}</td><td>L {{ i.costo_promedio }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %}

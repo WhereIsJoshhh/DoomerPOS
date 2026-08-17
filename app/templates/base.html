@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ config.APP_NAME }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+{% if g.usuario %}
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">DP</div>
+    <div><strong>DoomerPOS</strong><span>v4.0 Alto Potencial</span></div>
+  </div>
+  <nav>
+    {% for item in g.menu_items %}
+      <a href="{{ url_for(item.endpoint) }}" class="{{ 'active' if request.endpoint == item.endpoint else '' }}">
+        <span class="nav-icon">{{ item.icon }}</span>{{ item.label }}
+      </a>
+    {% endfor %}
+  </nav>
+  <div class="sidebar-user">
+    <small>Sesion activa</small>
+    <strong>{{ g.usuario.nombre }}</strong>
+    <span>{{ g.usuario.rol.nombre }}</span>
+    <form method="post" action="{{ url_for('auth.logout') }}" class="logout-form">
+      <button class="logout" type="submit">Cerrar sesion</button>
+    </form>
+  </div>
+</aside>
+{% endif %}
+<main class="content {{ '' if g.usuario else 'auth-content' }}">
+  {% if g.usuario %}
+  <div class="topbar">
+    <div>
+      <strong>{{ config.APP_NAME }}</strong>
+      <span>Control operativo, caja, inventario y reportes.</span>
+    </div>
+    <div class="topbar-actions">
+      <span class="pill soft">{{ g.usuario.sucursal.nombre if g.usuario.sucursal else 'Sin sucursal' }}</span>
+      {% if g.usuario.puede('pos.operar') %}
+      <a class="btn ghost" href="{{ url_for('pos.index') }}">Nuevo pedido</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  <section class="alerts">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}<div class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}
+    {% endwith %}
+  </section>
+  {% block content %}{% endblock %}
+</main>
+<script>window.DOOMERPOS_CSRF = "{{ csrf_token }}";</script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

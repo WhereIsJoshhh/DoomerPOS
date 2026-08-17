@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div><h1>Dashboard ejecutivo</h1><p>Vista rápida de ventas, pedidos, caja, mesas e inventario.</p></div>
+  <span class="pill soft">Indicadores de hoy</span>
+</header>
+<section class="kpi-grid">
+  <div class="kpi success"><span>Ventas del día</span><strong>L {{ '%.2f'|format(ventas_dia) }}</strong></div>
+  <div class="kpi"><span>Pedidos hoy</span><strong>{{ pedidos_hoy }}</strong></div>
+  <div class="kpi warn"><span>Pedidos activos</span><strong>{{ pedidos_abiertos }}</strong></div>
+  <div class="kpi"><span>Mesas ocupadas</span><strong>{{ mesas_ocupadas }}</strong></div>
+  <div class="kpi"><span>Mesas en limpieza</span><strong>{{ mesas_limpieza }}</strong></div>
+  <div class="kpi danger"><span>Productos bajo stock</span><strong>{{ alertas_stock }}</strong></div>
+</section>
+<section class="grid-2 wide-right">
+  <div class="panel">
+    <h2>Turno activo</h2>
+    {% if turno %}
+      <p><strong>Turno #{{ turno.id_turno }}</strong> abierto con fondo L {{ '%.2f'|format(turno.fondo_inicial) }}</p>
+      <div class="mini-grid"><span>Efectivo ventas</span><strong>L {{ '%.2f'|format(resumen.efectivo) }}</strong></div>
+      <div class="mini-grid"><span>Ingresos/Egresos</span><strong>L {{ '%.2f'|format(resumen.ingresos) }} / L {{ '%.2f'|format(resumen.egresos) }}</strong></div>
+      <div class="mini-grid"><span>Total esperado</span><strong>L {{ '%.2f'|format(resumen.total_sistema) }}</strong></div>
+    {% else %}
+      <p class="muted">No tienes turno de caja abierto. Abre caja para cobrar pedidos.</p>
+      <a class="btn primary" href="{{ url_for('caja.index') }}">Ir a caja</a>
+    {% endif %}
+  </div>
+  <div class="panel">
+    <h2>Ventas últimos 7 días</h2>
+    <div class="bar-list">
+      {% set maxv = ventas_semana|map(attribute=1)|max if ventas_semana else 0 %}
+      {% for dia, total in ventas_semana %}
+      <div class="bar-row"><span>{{ dia }}</span><div class="bar"><span style="width:{{ (total / maxv * 100) if maxv else 0 }}%"></span></div><strong>L {{ '%.0f'|format(total) }}</strong></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+<section class="grid-2">
+  <div class="panel">
+    <h2>Productos más vendidos</h2>
+    <table><thead><tr><th>Producto</th><th>Cant.</th><th>Total</th></tr></thead><tbody>{% for nombre, cantidad, total in top_productos %}<tr><td>{{ nombre }}</td><td>{{ cantidad }}</td><td class="right">L {{ '%.2f'|format(total) }}</td></tr>{% else %}<tr><td colspan="3">No hay ventas pagadas todavía.</td></tr>{% endfor %}</tbody></table>
+  </div>
+  <div class="panel">
+    <h2>Ventas por usuario</h2>
+    <table><thead><tr><th>Usuario</th><th>Pedidos</th><th>Total</th></tr></thead><tbody>{% for nombre, total, pedidos in ventas_por_usuario %}<tr><td>{{ nombre }}</td><td>{{ pedidos }}</td><td class="right">L {{ '%.2f'|format(total) }}</td></tr>{% else %}<tr><td colspan="3">Sin ventas hoy.</td></tr>{% endfor %}</tbody></table>
+  </div>
+</section>
+<section class="grid-2">
+  <div class="panel danger-soft"><h2>Alertas de inventario</h2><table><tbody>{% for inv, prod in alertas %}<tr><td>{{ prod.nombre }}</td><td>Stock {{ inv.existencia_actual }}</td><td class="right">Mín. {{ prod.stock_minimo }}</td></tr>{% else %}<tr><td>Inventario sin alertas críticas.</td></tr>{% endfor %}</tbody></table></div>
+  <div class="panel"><h2>Bitácora reciente</h2><table><tbody>{% for a in auditoria %}<tr><td>{{ a.modulo }}</td><td>{{ a.accion }}</td><td class="right">{{ a.fecha_hora.strftime('%H:%M') }}</td></tr>{% else %}<tr><td>No hay actividad.</td></tr>{% endfor %}</tbody></table></div>
+</section>
+{% endblock %}

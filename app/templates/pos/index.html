@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div><h1>POS / Pedidos</h1><p>Pedidos rapidos, descuentos, pago mixto, ticket y control de estados.</p></div>
+  <span class="pill {{ 'success' if turno else 'danger' }}">{{ 'Turno abierto' if turno else 'Sin turno de caja' }}</span>
+</header>
+
+{% if g.usuario.puede('pos.operar') %}
+<section class="grid-2 wide-left">
+  <div class="panel">
+    <h2>Nuevo pedido</h2>
+    <form method="post" action="{{ url_for('pos.nuevo_pedido') }}" class="form-grid">
+      <label>Canal<select name="id_canal" required>{% for c in canales %}<option value="{{ c.id_canal }}">{{ c.nombre }}</option>{% endfor %}</select></label>
+      <label>Mesa<select name="id_mesa"><option value="">Sin mesa</option>{% for m in mesas %}<option value="{{ m.id_mesa }}" {% if m.estado not in ['libre','reservada'] %}disabled{% endif %}>{{ m.zona }} {{ m.numero_mesa }} - {{ m.estado }}</option>{% endfor %}</select></label>
+      <label>Cliente<select name="id_cliente"><option value="">Cliente general</option>{% for c in clientes %}<option value="{{ c.id_cliente }}">{{ c.nombre }}</option>{% endfor %}</select></label>
+      <label>Prioridad<select name="prioridad"><option value="normal">Normal</option><option value="alta">Alta</option></select></label>
+      <label>Notas<input name="notas" maxlength="255" placeholder="Sin cebolla, para llevar, etc."></label>
+      <button class="btn primary" type="submit">Crear pedido</button>
+    </form>
+  </div>
+  <div class="panel info"><h2>Flujo v4.0</h2><p>Pendiente - En cocina - Listo - Servido - Pagado. La cancelacion, descuentos y cargos requieren permisos superiores.</p><p class="muted">Pago mixto: efectivo + tarjeta + transferencia, sumando exactamente el total.</p></div>
+</section>
+{% endif %}
+
+<section class="panel">
+  <div class="page-header"><div><h2>Historial y pedidos activos</h2><p>Busca por numero de pedido o nombre de cliente.</p></div></div>
+  <form method="get" class="searchbar">
+    <input name="q" placeholder="Buscar pedido o cliente" value="{{ q }}">
+    <select name="estado"><option value="activos" {% if estado=='activos' %}selected{% endif %}>Activos</option>{% for e in ['pendiente','en cocina','listo','servido','pagado','cancelado'] %}<option value="{{ e }}" {% if estado==e %}selected{% endif %}>{{ e }}</option>{% endfor %}</select>
+    <button class="btn primary">Filtrar</button><a class="btn ghost" href="{{ url_for('pos.index') }}">Limpiar</a>
+  </form>
+</section>
+
+<section>
+  {% for p in pedidos %}
+  <article class="order-card {{ p.prioridad }}">
+    <div class="order-head"><strong>Pedido #{{ p.id_pedido }} {% if p.prioridad=='alta' %}<span class="pill warn">Prioridad alta</span>{% endif %}</strong><span class="status {{ p.estado|replace(' ', '-') }}">{{ p.estado }}</span><span>Total L {{ '%.2f'|format(p.total) }}</span></div>
+    <div class="muted">Mesa: {{ p.mesa.numero_mesa if p.mesa else '-' }} | Canal: {{ p.canal.nombre }} | Cliente: {{ p.cliente.nombre if p.cliente else 'Cliente general' }} | Usuario: {{ p.usuario.nombre }} | {{ p.minutos_abierto }} min</div>
+    <table><thead><tr><th>Producto</th><th>Cant.</th><th>Notas</th><th class="right">Subtotal</th></tr></thead><tbody>{% for d in p.detalles %}<tr><td>{{ d.producto.nombre }}</td><td>{{ d.cantidad }}</td><td>{{ d.notas or '-' }}</td><td class="right">L {{ '%.2f'|format(d.subtotal) }}</td></tr>{% else %}<tr><td colspan="4">Sin productos</td></tr>{% endfor %}</tbody></table>
+    <div class="mini-grid"><span>Subtotal</span><strong>L {{ '%.2f'|format(p.subtotal) }}</strong></div>
+    <div class="mini-grid"><span>Descuento / Cargo</span><strong>-L {{ '%.2f'|format(p.descuento) }} / +L {{ '%.2f'|format(p.cargo_adicional) }}</strong></div>
+    <div class="mini-grid"><span>ISV</span><strong>L {{ '%.2f'|format(p.impuesto) }}</strong></div>
+
+    {% if p.estado not in ['pagado','cancelado'] %}
+    <div class="actions">
+      {% if g.usuario.puede('pos.operar') %}
+      <form method="post" action="{{ url_for('pos.agregar_producto', id_pedido=p.id_pedido) }}" class="inline-form">
+        <select name="id_producto" required>{% for prod in productos %}<option value="{{ prod.id_producto }}">{{ prod.nombre }} - L {{ prod.precio }}</option>{% endfor %}</select>
+        <input name="cantidad" type="number" step="0.01" min="0.01" value="1" required>
+        <input name="notas" placeholder="Notas">
+        <button class="btn" type="submit">Agregar</button>
+      </form>
+      <form method="post" action="{{ url_for('pos.enviar_cocina', id_pedido=p.id_pedido) }}"><button class="btn" type="submit">Enviar a cocina</button></form>
+      {% endif %}
+
+      {% if g.usuario.puede('descuento.aprobar') %}
+      <form method="post" action="{{ url_for('pos.ajustes', id_pedido=p.id_pedido) }}" class="inline-form">
+        <input name="descuento" type="number" step="0.01" min="0" placeholder="Descuento">
+        <input name="cargo_adicional" type="number" step="0.01" min="0" placeholder="Cargo adicional">
+        <input name="motivo" placeholder="Motivo">
+        <button class="btn warn" type="submit">Ajustar</button>
+      </form>
+      {% endif %}
+
+      {% if g.usuario.puede('pedidos.cobrar') %}
+      <form method="post" action="{{ url_for('pos.pagar', id_pedido=p.id_pedido) }}" class="inline-form">
+        <select name="id_metodo_pago" onchange="this.form.metodo_nombre.value=this.options[this.selectedIndex].text"><option value="" disabled selected>Metodo</option>{% for m in metodos %}<option value="{{ m.id_metodo_pago }}">{{ m.nombre }}</option>{% endfor %}</select>
+        <input type="hidden" name="metodo_nombre" value="">
+        <input name="monto" type="number" step="0.01" placeholder="Monto unico">
+        <input name="pago_efectivo" type="number" step="0.01" placeholder="Efectivo mixto">
+        <input name="pago_tarjeta" type="number" step="0.01" placeholder="Tarjeta mixto">
+        <input name="pago_transferencia" type="number" step="0.01" placeholder="Transferencia mixto">
+        <input name="referencia" placeholder="Referencia">
+        <button class="btn success" type="submit">Cobrar</button>
+      </form>
+      {% endif %}
+
+      {% if g.usuario.puede('pedido.anular') %}
+      <form method="post" action="{{ url_for('pos.cancelar', id_pedido=p.id_pedido) }}" class="inline-form confirm-form" data-confirm="Cancelar este pedido?"><input name="motivo" placeholder="Motivo" required><button class="btn danger" type="submit">Cancelar</button></form>
+      {% endif %}
+    </div>
+    {% else %}
+      {% if g.usuario.puede('pedidos.cobrar') %}
+      <div class="actions"><a class="btn primary" href="{{ url_for('pos.ticket', id_pedido=p.id_pedido) }}">Ver ticket/factura</a></div>
+      {% endif %}
+    {% endif %}
+  </article>
+  {% else %}<section class="panel"><p class="muted">No hay pedidos para mostrar.</p></section>{% endfor %}
+</section>
+{% endblock %}

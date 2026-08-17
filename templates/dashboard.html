@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Dashboard gerencial</h2>
+<section class="cards">
+  <article><span>Pedidos</span><strong>{{ total_pedidos }}</strong></article>
+  <article><span>Productos</span><strong>{{ total_productos }}</strong></article>
+  <article><span>Mesas ocupadas</span><strong>{{ mesas_ocupadas }}</strong></article>
+  <article><span>Ventas totales</span><strong>L {{ '%.2f'|format(ventas_total) }}</strong></article>
+</section>
+{% endblock %}

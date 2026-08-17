@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <h1>Caja y turnos</h1>
+    <p>Apertura, ingresos, egresos, pagos por metodo, arqueo y cierre.</p>
+  </div>
+  <span class="pill {{ 'success' if turno else 'danger' }}">{{ turno.estado if turno else 'Sin turno' }}</span>
+</header>
+
+{% if not turno %}
+  {% if g.usuario.puede('caja.abrir') %}
+  <section class="panel">
+    <h2>Abrir turno</h2>
+    <form method="post" action="{{ url_for('caja.abrir') }}" class="form-grid">
+      <label>Terminal<select name="id_terminal">{% for t in terminales %}<option value="{{ t.id_terminal }}">{{ t.codigo_terminal }} - {{ t.tipo }}</option>{% endfor %}</select></label>
+      <label>Fondo inicial<input type="number" step="0.01" name="fondo_inicial" value="500" required></label>
+      <label>Observacion<input name="observacion" placeholder="Inicio de jornada"></label>
+      <button class="btn primary">Abrir turno</button>
+    </form>
+  </section>
+  {% else %}
+  <section class="empty-state"><h2>Sin turno abierto</h2><p>Tu rol puede consultar caja, pero no abrir turnos.</p></section>
+  {% endif %}
+{% else %}
+<section class="kpi-grid">
+  <div class="kpi"><span>Fondo inicial</span><strong>L {{ '%.2f'|format(turno.fondo_inicial) }}</strong></div>
+  <div class="kpi"><span>Efectivo ventas</span><strong>L {{ '%.2f'|format(resumen.efectivo) }}</strong></div>
+  <div class="kpi"><span>Tarjeta</span><strong>L {{ '%.2f'|format(resumen.tarjeta) }}</strong></div>
+  <div class="kpi"><span>Transferencia</span><strong>L {{ '%.2f'|format(resumen.transferencia) }}</strong></div>
+  <div class="kpi success"><span>Ingresos</span><strong>L {{ '%.2f'|format(resumen.ingresos) }}</strong></div>
+  <div class="kpi warn"><span>Egresos</span><strong>L {{ '%.2f'|format(resumen.egresos) }}</strong></div>
+  <div class="kpi success"><span>Total esperado en caja</span><strong>L {{ '%.2f'|format(resumen.total_sistema) }}</strong></div>
+</section>
+
+{% if g.usuario.puede('caja.mover') or g.usuario.puede('caja.cerrar') %}
+<section class="grid-2">
+  {% if g.usuario.puede('caja.mover') %}
+  <div class="panel">
+    <h2>Registrar movimiento</h2>
+    <form method="post" action="{{ url_for('caja.movimiento') }}" class="form-stack">
+      <label>Tipo<select name="tipo"><option>Ingreso</option><option>Egreso</option></select></label>
+      <label>Concepto<input name="concepto" required placeholder="Compra menor, cambio adicional..."></label>
+      <label>Monto<input name="monto" type="number" step="0.01" required></label>
+      <label>Observacion<input name="observacion"></label>
+      <button class="btn primary">Guardar movimiento</button>
+    </form>
+  </div>
+  {% endif %}
+  {% if g.usuario.puede('caja.cerrar') %}
+  <div class="panel danger-soft">
+    <h2>Cerrar turno</h2>
+    <p class="muted">El cierre compara el efectivo esperado contra el efectivo contado. Las diferencias quedan en bitacora.</p>
+    <form method="post" action="{{ url_for('caja.cerrar') }}" class="form-stack confirm-form" data-confirm="Cerrar turno? Esta accion no se puede deshacer.">
+      <label>Total contado en efectivo<input name="total_contado" type="number" step="0.01" required></label>
+      <label>Observacion<input name="observacion" placeholder="Explica diferencias si existen"></label>
+      <button class="btn danger">Cerrar caja</button>
+    </form>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="panel">
+  <h2>Movimientos del turno</h2>
+  <table><thead><tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Usuario</th><th>Monto</th></tr></thead><tbody>
+  {% for m in movimientos %}<tr><td>{{ m.fecha.strftime('%H:%M') }}</td><td>{{ m.tipo }}</td><td>{{ m.concepto }}</td><td>{{ m.usuario.nombre }}</td><td class="right">L {{ '%.2f'|format(m.monto) }}</td></tr>{% else %}<tr><td colspan="5">Sin movimientos.</td></tr>{% endfor %}
+  </tbody></table>
+</section>
+{% endif %}
+
+<section class="panel">
+  <h2>Reporte de cierres recientes</h2>
+  <table><thead><tr><th>#</th><th>Fecha</th><th>Sistema</th><th>Contado</th><th>Diferencia</th><th>Responsable</th></tr></thead><tbody>
+  {% for c in cierres %}<tr><td>{{ c.id_cierre }}</td><td>{{ c.fecha.strftime('%Y-%m-%d %H:%M') }}</td><td>L {{ '%.2f'|format(c.total_sistema) }}</td><td>L {{ '%.2f'|format(c.total_contado) }}</td><td>L {{ '%.2f'|format(c.diferencia) }}</td><td>{{ c.usuario.nombre }}</td></tr>{% else %}<tr><td colspan="6">No hay cierres.</td></tr>{% endfor %}
+  </tbody></table>
+</section>
+{% endblock %}

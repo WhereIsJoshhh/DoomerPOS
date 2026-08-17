@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header"><div><h1>Auditoría y bitácora</h1><p>Acciones importantes del sistema con usuario, módulo, IP y fecha.</p></div></header>
+<section class="panel"><form method="get" class="form-grid"><label>Usuario<select name="usuario_id"><option value="">Todos</option>{% for u in usuarios %}<option value="{{ u.id_usuario }}" {{ 'selected' if usuario_id and usuario_id|int == u.id_usuario else '' }}>{{ u.nombre }}</option>{% endfor %}</select></label><label>Módulo<input name="modulo" value="{{ modulo }}"></label><button class="btn primary">Filtrar</button></form></section>
+<section class="panel"><h2>Eventos recientes</h2><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Módulo</th><th>Acción</th><th>Detalle</th><th>IP</th></tr></thead><tbody>{% for log in logs %}<tr><td>{{ log.fecha_hora.strftime('%Y-%m-%d %H:%M:%S') }}</td><td>{{ log.usuario.nombre if log.usuario else 'Sistema' }}</td><td>{{ log.modulo }}</td><td>{{ log.accion }}</td><td>{{ log.detalle }}</td><td>{{ log.ip }}</td></tr>{% else %}<tr><td colspan="6">Sin registros.</td></tr>{% endfor %}</tbody></table></section>
+{% endblock %}

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GastroPOS 360</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <aside class="sidebar">
+    <h1>GastroPOS <span>360</span></h1>
+    <nav>
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('pedidos') }}">Pedidos / POS</a>
+      <a href="{{ url_for('mesas') }}">Mesas</a>
+      <a href="{{ url_for('productos') }}">Productos</a>
+      <a href="{{ url_for('inventario') }}">Inventario</a>
+      <a href="{{ url_for('caja') }}">Caja</a>
+      <a href="{{ url_for('reportes') }}">Reportes</a>
+    </nav>
+  </aside>
+  <main class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}<div class="alert {{ category }}">{{ message }}</div>{% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

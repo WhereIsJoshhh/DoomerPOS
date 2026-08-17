@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="page-header"><div><h1>Cocina / KDS</h1><p>Tickets por estado, prioridad y tiempo abierto.</p></div><span class="pill soft">Producción</span></header>
+<div class="tabs"><a class="tab {{ 'active' if estado=='todos' else '' }}" href="{{ url_for('cocina.index', estado='todos') }}">Todos</a>{% for e in estados %}<a class="tab {{ 'active' if estado==e else '' }}" href="{{ url_for('cocina.index', estado=e) }}">{{ e }}</a>{% endfor %}</div>
+<section class="kds-board">
+  {% for e in estados %}
+  <div class="kds-column"><h2>{{ e|title }}</h2>
+    {% for p in columnas[e] %}
+    <article class="kds-ticket {{ p.prioridad }}">
+      <div class="order-head"><strong>#{{ p.id_pedido }}</strong><span class="status {{ p.estado|replace(' ', '-') }}">{{ p.estado }}</span></div>
+      <p class="muted">Mesa {{ p.mesa.numero_mesa if p.mesa else 'Mostrador' }} · {{ p.minutos_abierto }} min · {{ p.prioridad }}</p>
+      <ul>{% for d in p.detalles %}<li>{{ d.cantidad }} x {{ d.producto.nombre }} {% if d.notas %}<small>({{ d.notas }})</small>{% endif %}</li>{% endfor %}</ul>
+      <div class="actions">
+        {% if p.estado == 'en cocina' %}<form method="post" action="{{ url_for('cocina.cambiar_estado', id_pedido=p.id_pedido, accion='listo') }}"><button class="btn success">Marcar listo</button></form>{% endif %}
+        {% if p.estado == 'listo' %}<form method="post" action="{{ url_for('cocina.cambiar_estado', id_pedido=p.id_pedido, accion='servido') }}"><button class="btn primary">Marcar servido</button></form>{% endif %}
+      </div>
+    </article>
+    {% else %}<p class="muted">Sin pedidos.</p>{% endfor %}
+  </div>
+  {% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Reportes gerenciales</h2>
+<section class="cards"><article><span>Ventas acumuladas</span><strong>L {{ '%.2f'|format(ventas) }}</strong></article><article><span>Órdenes</span><strong>{{ pedidos|length }}</strong></article></section>
+<p>Este módulo se ampliará con reportes por producto, empleado, sucursal, método de pago y cierre de caja.</p>
+{% endblock %}
